@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package message_id;
+
+option go_package="github.com/nevercatchmeow/penumbra/proto/message_id;message_id";
+
+enum MessageId {
+  None = 0;
+
+  CsLogin = 100001;
+  ScLogin = 100002;
+  CsLogout = 100003;
+  ScLogout = 100004;
+  CsReconnect = 100005;
+  ScReconnect = 100006;
+}
