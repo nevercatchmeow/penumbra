@@ -11,9 +11,9 @@ type buffer[T any] struct {
 }
 
 type Ring[T any] struct {
-	len     int64
+	length  int64
 	content *buffer[T]
-	mu      sync.Mutex
+	mutex   sync.Mutex
 }
 
 func New[T any](size int64) *Ring[T] {
@@ -26,7 +26,7 @@ func New[T any](size int64) *Ring[T] {
 }
 
 func (slf *Ring[T]) Push(item T) {
-	slf.mu.Lock()
+	slf.mutex.Lock()
 	slf.content.tail = (slf.content.tail + 1) % slf.content.mod
 	if slf.content.tail == slf.content.head {
 		size := slf.content.mod * 2
@@ -43,37 +43,44 @@ func (slf *Ring[T]) Push(item T) {
 		}
 		slf.content = content
 	}
-	atomic.AddInt64(&slf.len, 1)
+	atomic.AddInt64(&slf.length, 1)
 	slf.content.items[slf.content.tail] = item
-	slf.mu.Unlock()
+	slf.mutex.Unlock()
 }
 
-func (slf *Ring[T]) Len() int64 {
-	return atomic.LoadInt64(&slf.len)
+func (slf *Ring[T]) Length() int64 {
+	return atomic.LoadInt64(&slf.length)
+}
+
+func (slf *Ring[T]) Empty() bool {
+	return slf.Length() == 0
 }
 
 func (slf *Ring[T]) Pop() (T, bool) {
-	if slf.Len() == 0 {
+	if slf.Empty() {
 		var t T
 		return t, false
 	}
-	slf.mu.Lock()
+	slf.mutex.Lock()
 	slf.content.head = (slf.content.head + 1) % slf.content.mod
 	item := slf.content.items[slf.content.head]
 	var t T
 	slf.content.items[slf.content.head] = t
-	atomic.AddInt64(&slf.len, -1)
-	slf.mu.Unlock()
+	atomic.AddInt64(&slf.length, -1)
+	slf.mutex.Unlock()
 	return item, true
 }
 
 func (slf *Ring[T]) PopN(n int64) ([]T, bool) {
-	slf.mu.Lock()
-	content := slf.content
-	if n >= slf.len {
-		n = slf.len
+	if slf.Empty() {
+		return nil, false
 	}
-	atomic.AddInt64(&slf.len, -n)
+	slf.mutex.Lock()
+	content := slf.content
+	if n >= slf.length {
+		n = slf.length
+	}
+	atomic.AddInt64(&slf.length, -n)
 	items := make([]T, n)
 	for i := int64(0); i < n; i++ {
 		pos := (content.head + 1 + i) % content.mod
@@ -82,6 +89,6 @@ func (slf *Ring[T]) PopN(n int64) ([]T, bool) {
 		content.items[pos] = t
 	}
 	content.head = (content.head + n) % content.mod
-	slf.mu.Unlock()
+	slf.mutex.Unlock()
 	return items, true
 }
