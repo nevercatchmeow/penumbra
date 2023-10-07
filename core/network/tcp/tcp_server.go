@@ -15,7 +15,7 @@ import (
 	"github.com/samber/lo"
 
 	"github.com/nevercatchmeow/penumbra/core/network"
-	"github.com/nevercatchmeow/penumbra/core/tools/container/dictionary"
+	"github.com/nevercatchmeow/penumbra/core/tools/container/dict"
 	"github.com/nevercatchmeow/penumbra/core/tools/log"
 )
 
@@ -23,7 +23,7 @@ type tcpServer struct {
 	*options
 	*network.BaseEvent
 	eng       gnet.Engine
-	online    *dictionary.Dictionary[string, network.Conn]
+	online    *dict.Dict[string, network.Conn]
 	exitCh    chan os.Signal
 	isRunning bool
 	codec     *Codec
@@ -31,7 +31,7 @@ type tcpServer struct {
 
 func NewServer(addr string, opts ...Option) network.Server {
 	srv := &tcpServer{
-		online: dictionary.NewDictionary[string, network.Conn](),
+		online: dict.New[string, network.Conn](),
 		exitCh: make(chan os.Signal),
 	}
 	srv.BaseEvent = &network.BaseEvent{Server: srv}
