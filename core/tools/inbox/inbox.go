@@ -4,8 +4,7 @@ import (
 	"runtime"
 	"sync/atomic"
 
-	"golang.org/x/exp/constraints"
-
+	"github.com/nevercatchmeow/penumbra/core/tools/constraints"
 	"github.com/nevercatchmeow/penumbra/core/tools/container/ring"
 )
 
